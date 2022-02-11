@@ -1,15 +1,30 @@
-import React from 'react';
-
-import { Container } from './styles';
-import { ButtonIcon } from '../ButtonIcon';
-import { Input } from '../Input';
+import React, { useState } from "react";
+import { Alert } from "react-native";
+import { Container } from "./styles";
+import { ButtonIcon } from "../ButtonIcon";
+import { Input } from "../Input";
+import fireststore from "@react-native-firebase/firestore";
 
 export function FormBox() {
+  const [description, setDescription] = useState("");
+  const [quantity, setQuantity] = useState(0);
+
+  async function handleProductAdd() {
+    fireststore()
+      .collection("products")
+      // .doc('my-custom-id')
+      // .set no lugar do .add
+      .add({ description, quantity, done: false, createdAt: fireststore.FieldValue.serverTimestamp() })
+      .then(() => { Alert.alert('Produto adicionado com sucesso')})
+      .catch((error) => console.error(error));
+  }
+
   return (
     <Container>
       <Input
         placeholder="Nome do produto"
         size="medium"
+        onChangeText={setDescription}
       />
 
       <Input
@@ -17,12 +32,13 @@ export function FormBox() {
         keyboardType="numeric"
         size="small"
         style={{ marginHorizontal: 8 }}
+        onChangeText={(value) => setQuantity(Number(value))}
       />
 
       <ButtonIcon
-        size='large'
+        size="large"
         icon="add-shopping-cart"
-        onPress={() => { }}
+        onPress={handleProductAdd}
       />
     </Container>
   );
