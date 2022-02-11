@@ -12,7 +12,12 @@ export function ShoppingList() {
   useEffect(() => {
     const subscribe = firestore()
       .collection("products")
-      // .where("quantity", "==", 5)
+      // .where("quantity", "==", 5) este código para fazer filtros
+      //.limit(3) para limitar quantidade de dados de retorno
+      .orderBy("description", "asc")
+      //.orderBy("quantity")
+      // .startAt(3) // condicional
+      // .endAt(5) // condicional
       .onSnapshot((querySnapshot) => {
         const data = querySnapshot.docs.map((doc) => {
           return { id: doc.id, ...doc.data() };
