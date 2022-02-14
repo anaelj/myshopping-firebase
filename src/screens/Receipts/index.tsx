@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FlatList } from "react-native";
+import { Alert, FlatList } from "react-native";
 
 import { Container, PhotoInfo } from "./styles";
 import { Header } from "../../components/Header";
@@ -11,13 +11,32 @@ import storage from "@react-native-firebase/storage";
 export function Receipts() {
   const [photos, setPhotos] = useState<FileProps[]>([]);
   const [photoSelected, setPhotoSelected] = useState("");
+  const [photoInfo, setPhotoInfo] = useState("");
 
   const handleShowImage = async (path: string) => {
     const urlImage = await storage().ref(path).getDownloadURL();
     setPhotoSelected(urlImage);
+
+    const info = await storage().ref(path).getMetadata();
+    setPhotoInfo(`Upload realizado em ${info.timeCreated}`);
   };
 
   useEffect(() => {
+    setPhotoSelected("");
+  }, [photos]);
+
+  const handleDeleteImage = async (path: string) => {
+    storage()
+      .ref(path)
+      .delete()
+      .then(() => {
+        Alert.alert("Imagem excluída com sucesso!");
+        fetchImages();
+      })
+      .catch((error) => console.error(error));
+  };
+
+  const fetchImages = async () => {
     storage()
       .ref("images")
       .list()
@@ -31,6 +50,10 @@ export function Receipts() {
         });
         setPhotos(files);
       });
+  };
+
+  useEffect(() => {
+    fetchImages();
   }, []);
 
   return (
@@ -39,7 +62,7 @@ export function Receipts() {
 
       <Photo uri={photoSelected} />
 
-      <PhotoInfo>Informações da foto</PhotoInfo>
+      <PhotoInfo>{photoInfo}</PhotoInfo>
 
       <FlatList
         data={photos}
@@ -48,7 +71,9 @@ export function Receipts() {
           <File
             data={item}
             onShow={() => handleShowImage(item.path)}
-            onDelete={() => {}}
+            onDelete={() => {
+              handleDeleteImage(item.path);
+            }}
           />
         )}
         contentContainerStyle={{ paddingBottom: 100 }}
