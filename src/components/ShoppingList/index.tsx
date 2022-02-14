@@ -10,17 +10,21 @@ export function ShoppingList() {
   const [products, setProducts] = useState<ProductProps[]>([]);
 
   useEffect(() => {
-    firestore()
+    const subscribe = firestore()
       .collection("products")
-      //.doc('informar id') para quando for buscar apenas um registro pelo id
-      .get()
-      .then((response) => {
-        const data = response.docs.map((doc) => {
+      // .where("quantity", "==", 5) este código para fazer filtros
+      //.limit(3) para limitar quantidade de dados de retorno
+      .orderBy("description", "asc")
+      //.orderBy("quantity")
+      // .startAt(3) // condicional
+      // .endAt(5) // condicional
+      .onSnapshot((querySnapshot) => {
+        const data = querySnapshot.docs.map((doc) => {
           return { id: doc.id, ...doc.data() };
         }) as ProductProps[];
         setProducts(data);
-      })
-      .catch((error) => console.error(error));
+      });
+    return () => subscribe();
   }, []);
 
   return (
